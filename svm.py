@@ -5,16 +5,16 @@ from sklearn.metrics import r2_score,mean_absolute_error,mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
 
-ROAD_NUM = 100
+ROAD_NUM = 655
 
 STEP = 12
 
 TIME_LENGTH = 1021 - STEP
 
-PRED_TIME = 1
+PRED_TIME = 3
 
-road_id = np.genfromtxt('second_ring_orign.txt')
-data = np.genfromtxt('E:\data\Data0\output4\\1106_velocity_cnn.txt')
+road_id = np.genfromtxt('E:/data/Data0/output4/SRCN/beijing_union_second_ring_800r.txt')
+data = np.genfromtxt('E:/y.txt')
 
 data = data.T
 
@@ -28,23 +28,17 @@ time_seq = np.arange(TIME_LENGTH)
 
 for index, road_velocity in enumerate(data):
 
-    if index % 30 != 0 or index == 0:
-        continue
-
-    if index / 30 > 100:
-        break
-
     X_temp = np.zeros(shape=(TIME_LENGTH, STEP))
 
     for i in range(0, road_velocity.size - STEP - PRED_TIME + 1):
         X_temp[i] = np.array(road_velocity[i:i + STEP])
-        y[(int)(index/30 -1)*TIME_LENGTH + i] = road_velocity[i + STEP + PRED_TIME - 1]
+        y[index*TIME_LENGTH + i] = road_velocity[i + STEP + PRED_TIME - 1]
 
     id_seq = np.full((TIME_LENGTH,), road_id[index])
     id_time = np.vstack((id_seq, time_seq))
     id_time = id_time.T
     result = np.hstack((id_time, X_temp))
-    X[(int)(index/30 -1)*TIME_LENGTH :(int)(index/30)*TIME_LENGTH] = result
+    X[index*TIME_LENGTH :(index+1)*TIME_LENGTH] = result
 
 # 正规化
 X = preprocessing.scale(X)
@@ -54,14 +48,14 @@ X_train,X_test,y_train,y_test = train_test_split(X,y, test_size=0.3)
 
 
 # 线性核函数初始化的SVR
-linear_svr = SVR(kernel='linear')
-linear_svr.fit(X_train, y_train)
-linear_svr_y_predict = linear_svr.predict(X_test)
+# linear_svr = SVR(kernel='linear')
+# linear_svr.fit(X_train, y_train)
+# linear_svr_y_predict = linear_svr.predict(X_test)
 
 # 多项式核函数初始化的SVR
-poly_svr = SVR(kernel='poly')
-poly_svr.fit(X_train, y_train)
-poly_svr_y_predict = poly_svr.predict(X_test)
+# poly_svr = SVR(kernel='poly')
+# poly_svr.fit(X_train, y_train)
+# poly_svr_y_predict = poly_svr.predict(X_test)
 
 # 径向基核函数初始化的SVR
 rbf_svr = SVR(kernel='rbf')
@@ -72,12 +66,12 @@ ss_X=StandardScaler()
 ss_y=StandardScaler()
 
 
-print('R-squared value of linear SVR is',linear_svr.score(X_test,y_test))
-print('The mean squared error of linear SVR is',mean_squared_error(y_test,linear_svr_y_predict))
-print('The mean absolute error of linear SVR is',mean_absolute_error(y_test,linear_svr_y_predict))
+# print('R-squared value of linear SVR is',linear_svr.score(X_test,y_test))
+# print('The mean squared error of linear SVR is',mean_squared_error(y_test,linear_svr_y_predict))
+# print('The mean absolute error of linear SVR is',mean_absolute_error(y_test,linear_svr_y_predict))
 
-print(' ')
-print('R-squared value of Poly SVR is',poly_svr.score(X_test,y_test))
+# print(' ')
+# print('R-squared value of Poly SVR is',poly_svr.score(X_test,y_test))
 '''  
 print('The mean squared error of Poly SVR is',mean_squared_error(ss_y.inverse_transform(y_test),
                                                                  ss_y.inverse_transform(poly_svr_y_predict)))

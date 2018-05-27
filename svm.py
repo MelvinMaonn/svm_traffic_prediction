@@ -5,14 +5,14 @@ from sklearn.metrics import r2_score,mean_absolute_error,mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
 
-ROAD_NUM = 100
+ROAD_NUM = 655
 
 TIME_LENGTH = 1006
 
 STEP = 15
 
-road_id = np.genfromtxt('second_ring_orign.txt')
-data = np.genfromtxt('E:\data\Data0\output4\\1106_velocity_cnn.txt')
+road_id = np.genfromtxt('drive/SVM/beijing_union_second_ring_800r.txt')
+data = np.genfromtxt('drive/SVM/y.txt')
 
 data = data.T
 
@@ -26,23 +26,17 @@ time_seq = np.arange(TIME_LENGTH)
 
 for index, road_velocity in enumerate(data):
 
-    if index % 30 != 0 or index == 0:
-        continue
-
-    if index / 30 > 100:
-        break
-
     X_temp = np.zeros(shape=(TIME_LENGTH, STEP))
 
     for i in range(0, road_velocity.size - STEP):
         X_temp[i] = np.array(road_velocity[i:i + STEP])
-        y[(int)(index/30 -1)*TIME_LENGTH + i] = road_velocity[i + STEP]
+        y[index*TIME_LENGTH + i] = road_velocity[i + STEP]
 
     id_seq = np.full((TIME_LENGTH,), road_id[index])
     id_time = np.vstack((id_seq, time_seq))
     id_time = id_time.T
     result = np.hstack((id_time, X_temp))
-    X[(int)(index/30 -1)*TIME_LENGTH :(int)(index/30)*TIME_LENGTH] = result
+    X[index*TIME_LENGTH :(index+1)*TIME_LENGTH] = result
 
 # 正规化
 X = preprocessing.scale(X)

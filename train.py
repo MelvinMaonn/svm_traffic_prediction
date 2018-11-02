@@ -7,18 +7,19 @@ from sklearn.svm import SVR
 import metrics
 
 import datetime
+import config
 
-ROAD_NUM = 100
+ROAD_NUM = 655
 
 STEP = 12
 
-PRED_TIME = 1
+PRED_TIME = 2
 
 TIME_LENGTH = 1021*30 - STEP - PRED_TIME + 1
 
 
 road_id = np.genfromtxt('G:/SRCN/beijing_union_second_ring_800r.txt')
-data = np.genfromtxt('G:/SRCN/November_800r_velocity_cnn.txt')
+data = np.genfromtxt('G:/SRCN/November_800r_velocity_cnn_2.txt')
 
 data = data.T
 
@@ -35,23 +36,17 @@ time_seq = np.append(time_seq,np.arange(1021 - STEP - PRED_TIME + 1))
 
 for index, road_velocity in enumerate(data):
 
-    if index % 6 != 0 or index == 0:
-        continue
-
-    if index / 6 > 100:
-        break
-
     X_temp = np.zeros(shape=(TIME_LENGTH, STEP))
 
     for i in range(0, road_velocity.size - STEP - PRED_TIME + 1):
         X_temp[i] = np.array(road_velocity[i:i + STEP])
-        y[(int)(index / 6 - 1) * TIME_LENGTH + i] = road_velocity[i + STEP + PRED_TIME - 1]
+        y[index*TIME_LENGTH + i] = road_velocity[i + STEP + PRED_TIME - 1]
 
     id_seq = np.full((TIME_LENGTH,), road_id[index])
     id_time = np.vstack((id_seq, time_seq))
     id_time = id_time.T
     result = np.hstack((id_time, X_temp))
-    X[(int)(index / 6 - 1) * TIME_LENGTH:(int)(index / 6) * TIME_LENGTH] = result
+    X[index*TIME_LENGTH : (index + 1)*TIME_LENGTH] = result
 
 print(X.size)
 print(y.size)
@@ -60,26 +55,23 @@ print(y.size)
 X = preprocessing.scale(X)
 
 # 分割训练集和测试集
-X_train = X[0:21*1021]
-X_test = X[21*1021:]
-y_train = y[0:21*1021]
-y_test = y[21*1021:]
+X_train = X[0:27*1021]
+X_test = X[27*1021:]
+y_train = y[0:27*1021]
+y_test = y[27*1021:]
 
 
 # 径向基核函数初始化的SVR
 rbf_svr = SVR(kernel='rbf')
-
-start = datetime.datetime.now()
 rbf_svr.fit(X_train, y_train)
-end = datetime.datetime.now()
-print("训练耗时：" + str(end - start))
 
 start = datetime.datetime.now()
 rbf_svr_y_predict = rbf_svr.predict(X_test)
 end = datetime.datetime.now()
-print("预测耗时：" + str(end - start))
+print("训练预测耗时：" + str(end - start))
 
-np.savetxt('prediction/prediction_100r_1min_test_2.txt', rbf_svr_y_predict)
+np.savetxt('prediction/prediction_655r_2min_3day.txt', rbf_svr_y_predict)
+
 
 print(' ')
 start = datetime.datetime.now()
@@ -90,5 +82,5 @@ print('The mean absolute percentage error of RBF SVR is', metrics.masked_mape_np
 end = datetime.datetime.now()
 print("计算metrics耗时：" + str(end - start))
 
-joblib.dump(rbf_svr, 'save/rbf_svr_100_1min_test_2.pkl')
+joblib.dump(rbf_svr, 'save/rbf_svr_655_2min_3day.pkl')
 
